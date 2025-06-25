@@ -1,9 +1,12 @@
-# Audio files (uncomment if you don't want to track audio files in git)
-# audio/*.mp3
-# audio/*.wav
-# audio/*.ogg
-# audio/*.m4a
-# audio/*
+# Audio files (keep these local, don't upload to GitHub)
+audio/*.mp3
+audio/*.wav
+audio/*.ogg
+audio/*.m4a
+*.mp3
+*.wav
+*.ogg
+*.m4a
 
 # System files
 .DS_Store
@@ -16,8 +19,22 @@ Thumbs.db
 *~
 
 # Logs
+*.log
 .log
 
 # Temporary files
 .tmp
 .temp
+
+# Node modules (if any)
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# Tunnel configuration (keep local)
+tunnel-config.json
+
+# Keep tunnel-url.js tracked for GitHub Pages
+# tunnel-url.js
