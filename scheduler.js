@@ -265,9 +265,8 @@ class AudioScheduler {
             if (window.TunnelAudioManager) {
                 await window.TunnelAudioManager.loadProtectedAudio(audioPlayer, audioFile, currentClass.id);
             } else {
-                // Fallback to local audio for development
-                console.log('🏠 Tunnel not available, using local audio...');
-                audioPlayer.src = `audio/${audioFile}`;
+                // No fallback - tunnel is required for security
+                throw new Error('Tunnel connection required - streaming server is not available');
             }
 
             // Set initial volume

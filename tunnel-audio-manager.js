@@ -277,7 +277,7 @@ class TunnelAudioManager {
             } else {
                 statusElement.innerHTML = `
                     <div style="color: #e74c3c; font-size: 0.9rem;">
-                        ⚠️ Tunnel connection unavailable - using local mode
+                        ❌ Streaming server offline - audio not available
                     </div>
                 `;
             }
@@ -288,16 +288,17 @@ class TunnelAudioManager {
     static async loadProtectedAudio(audioElement, audioFile, classId) {
         const manager = window.tunnelAudioManager || new TunnelAudioManager();
         
+        // Check if tunnel is available
+        if (!manager.tunnelConfig || !manager.isConnected) {
+            throw new Error('Streaming server not available - please make sure the tunnel is running');
+        }
+        
         try {
             await manager.loadAudioWithAuth(audioElement, audioFile, classId);
             return audioElement;
         } catch (error) {
             console.error('Failed to load audio via tunnel:', error.message);
-            
-            // Fallback to direct file loading for local development
-            console.log('🔄 Falling back to direct file loading...');
-            audioElement.src = `audio/${audioFile}`;
-            return audioElement;
+            throw new Error(`Tunnel streaming failed: ${error.message}`);
         }
     }
 }

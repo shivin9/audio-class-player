@@ -1,8 +1,9 @@
 # Audio files (uncomment if you don't want to track audio files in git)
-# audio/*.mp3
+audio/*.mp3
 # audio/*.wav
 # audio/*.ogg
 # audio/*.m4a
+audio/*
 
 # System files
 .DS_Store
@@ -15,8 +16,8 @@ Thumbs.db
 *~
 
 # Logs
-*.log
+.log
 
 # Temporary files
-*.tmp
-*.temp
+.tmp
+.temp
