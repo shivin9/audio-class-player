@@ -150,6 +150,16 @@ window.AUDIO_CONFIG = {
         timeFormat: 12
     },
 
+    // Tunnel Configuration (update this when your tunnel starts)
+    tunnel: {
+        // Set this to your current tunnel URL when streaming
+        // Example: 'https://kirtana-classes.ngrok-free.app'
+        baseUrl: 'https://bg-class.ngrok-free.app', // ← Your constant tunnel URL
+        
+        // Auto-detect from tunnel-url.js if available
+        autoDetect: true
+    },
+
     // Advanced Settings
     advanced: {
         // Enable analytics/logging (requires server-side implementation)

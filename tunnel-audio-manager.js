@@ -21,7 +21,15 @@ class TunnelAudioManager {
     async loadTunnelConfig() {
         // Try to load tunnel configuration
         try {
-            // Check if tunnel config is available
+            // First check if tunnel config is available from config.js
+            if (window.AUDIO_CONFIG?.tunnel?.baseUrl) {
+                const baseUrl = window.AUDIO_CONFIG.tunnel.baseUrl;
+                console.log('🔗 Using tunnel URL from config.js:', baseUrl);
+                this.setupTunnelConfig(baseUrl);
+                return;
+            }
+
+            // Check if tunnel config is available from tunnel-url.js
             if (window.TUNNEL_CONFIG) {
                 this.tunnelConfig = window.TUNNEL_CONFIG;
                 console.log('🔗 Tunnel configuration loaded:', this.tunnelConfig.baseUrl);
@@ -29,7 +37,7 @@ class TunnelAudioManager {
                 return;
             }
 
-            // Try to load from tunnel-url.js
+            // Try to load from tunnel-url.js (for local development)
             const script = document.createElement('script');
             script.src = 'tunnel-url.js';
             script.onload = async () => {
@@ -40,14 +48,58 @@ class TunnelAudioManager {
                 }
             };
             script.onerror = () => {
-                console.log('ℹ️ No tunnel configuration found - running in local mode');
-                this.setupLocalMode();
+                console.log('ℹ️ No tunnel configuration found');
+                // Try to detect tunnel from URL parameter or prompt user
+                this.promptForTunnelUrl();
             };
             document.head.appendChild(script);
 
         } catch (error) {
-            console.log('ℹ️ Tunnel not available, using local mode:', error.message);
-            this.setupLocalMode();
+            console.log('ℹ️ Tunnel not available:', error.message);
+            this.promptForTunnelUrl();
+        }
+    }
+
+    promptForTunnelUrl() {
+        // Check if tunnel URL is provided via URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const tunnelUrl = urlParams.get('tunnel');
+        
+        if (tunnelUrl) {
+            console.log('🔗 Using tunnel URL from parameter:', tunnelUrl);
+            this.setupTunnelConfig(tunnelUrl);
+            return;
+        }
+
+        // Show a message to the user about missing tunnel
+        this.showTunnelRequiredMessage();
+    }
+
+    setupTunnelConfig(baseUrl) {
+        // Remove trailing slash
+        baseUrl = baseUrl.replace(/\/$/, '');
+        
+        this.tunnelConfig = {
+            baseUrl: baseUrl,
+            audioEndpoint: `${baseUrl}/audio/`,
+            authEndpoint: `${baseUrl}/auth`,
+            healthEndpoint: `${baseUrl}/health`
+        };
+        
+        console.log('🔗 Tunnel configuration set up:', this.tunnelConfig.baseUrl);
+        this.testConnection();
+    }
+
+    showTunnelRequiredMessage() {
+        const statusElement = document.getElementById('tunnel-status');
+        if (statusElement) {
+            statusElement.innerHTML = `
+                <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 0.9rem;">
+                    ⚠️ <strong>Streaming Server Required</strong><br>
+                    Audio streaming requires the tunnel server to be running.<br>
+                    <small>Contact your instructor if you cannot access the audio.</small>
+                </div>
+            `;
         }
     }
 
