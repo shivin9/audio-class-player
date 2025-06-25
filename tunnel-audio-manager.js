@@ -21,7 +21,15 @@ class TunnelAudioManager {
     async loadTunnelConfig() {
         // Try to load tunnel configuration
         try {
-            // Check if tunnel config is available
+            // First check if tunnel config is available from config.js
+            if (window.AUDIO_CONFIG?.tunnel?.baseUrl) {
+                const baseUrl = window.AUDIO_CONFIG.tunnel.baseUrl;
+                console.log('🔗 Using tunnel URL from config.js:', baseUrl);
+                this.setupTunnelConfig(baseUrl);
+                return;
+            }
+
+            // Check if tunnel config is available from tunnel-url.js global
             if (window.TUNNEL_CONFIG) {
                 this.tunnelConfig = window.TUNNEL_CONFIG;
                 console.log('🔗 Tunnel configuration loaded:', this.tunnelConfig.baseUrl);
@@ -29,7 +37,7 @@ class TunnelAudioManager {
                 return;
             }
 
-            // Try to load from tunnel-url.js
+            // Try to load from tunnel-url.js file
             const script = document.createElement('script');
             script.src = 'tunnel-url.js';
             script.onload = async () => {
@@ -40,14 +48,14 @@ class TunnelAudioManager {
                 }
             };
             script.onerror = () => {
-                console.log('ℹ️ No tunnel configuration found - running in local mode');
-                this.setupLocalMode();
+                console.log('ℹ️ No tunnel configuration found');
+                this.promptForTunnelUrl();
             };
             document.head.appendChild(script);
 
         } catch (error) {
-            console.log('ℹ️ Tunnel not available, using local mode:', error.message);
-            this.setupLocalMode();
+            console.log('ℹ️ Tunnel not available:', error.message);
+            this.promptForTunnelUrl();
         }
     }
 

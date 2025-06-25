@@ -181,18 +181,30 @@ console.log('🔗 Tunnel connected:', window.TUNNEL_CONFIG.baseUrl);
         const configPath = path.join(__dirname, 'config.js');
         let configContent = fs.readFileSync(configPath, 'utf8');
 
-        // Update the tunnel baseUrl in config.js
-        configContent = configContent.replace(
-            /baseUrl: ['"][^'"]*['"],?\s*\/\/ ← Your constant tunnel URL/,
-            `baseUrl: '${this.tunnelUrl}', // ← Auto-updated tunnel URL`
-        );
+        // Update the tunnel baseUrl in config.js with multiple patterns
+        const patterns = [
+            // Pattern 1: With comment variations
+            [/baseUrl: ['"][^'"]*['"],?\s*\/\/ Will be set to current tunnel URL/, `baseUrl: '${this.tunnelUrl}', // Will be set to current tunnel URL`],
+            [/baseUrl: ['"][^'"]*['"],?\s*\/\/ ← Auto-updated tunnel URL/, `baseUrl: '${this.tunnelUrl}', // ← Auto-updated tunnel URL`],
+            [/baseUrl: ['"][^'"]*['"],?\s*\/\/ ← Your constant tunnel URL/, `baseUrl: '${this.tunnelUrl}', // ← Auto-updated tunnel URL`],
+            // Pattern 2: General tunnel baseUrl pattern
+            [/(tunnel:\s*{[^}]*baseUrl:\s*)['"][^'"]*['"]/, `$1'${this.tunnelUrl}'`],
+            // Pattern 3: Simple baseUrl pattern in tunnel section
+            [/(\/\/ This gets automatically updated by auto-deploy\.js or start-streaming\.js[\s\S]*?baseUrl:\s*)['"][^'"]*['"]/, `$1'${this.tunnelUrl}'`]
+        ];
 
-        // Fallback pattern if the comment format is different
-        if (!configContent.includes(this.tunnelUrl)) {
-            configContent = configContent.replace(
-                /(tunnel:\s*{[^}]*baseUrl:\s*)['"][^'"]*['"]/,
-                `$1'${this.tunnelUrl}'`
-            );
+        let updated = false;
+        for (const [pattern, replacement] of patterns) {
+            if (pattern.test(configContent)) {
+                configContent = configContent.replace(pattern, replacement);
+                updated = true;
+                console.log('✅ Updated config.js tunnel URL');
+                break;
+            }
+        }
+
+        if (!updated) {
+            console.log('⚠️ Could not update config.js tunnel URL - manual update may be needed');
         }
 
         fs.writeFileSync(configPath, configContent);

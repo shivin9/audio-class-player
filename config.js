@@ -150,6 +150,15 @@ window.AUDIO_CONFIG = {
         timeFormat: 12
     },
 
+    // Tunnel Configuration (auto-updated by deploy script)
+    tunnel: {
+        // This gets automatically updated by auto-deploy.js or start-streaming.js
+        baseUrl: 'https://ff09-223-233-78-254.ngrok-free.app', // Will be set to current tunnel URL
+        
+        // Auto-detect from tunnel-url.js if available
+        autoDetect: true
+    },
+
     // Advanced Settings
     advanced: {
         // Enable analytics/logging (requires server-side implementation)
