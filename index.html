@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Audio Class</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎧 Audio Class Player</h1>
+            <div id="status" class="status"></div>
+            <div id="tunnel-status" class="tunnel-status"></div>
+            <nav class="nav-buttons">
+                <button id="back-to-list-btn" class="nav-btn hidden">← Back to Class List</button>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <!-- Class List Screen -->
+            <div id="class-list-screen" class="screen">
+                <div class="class-list-content">
+                    <h2>📚 Available Audio Classes</h2>
+                    <p class="subtitle">Choose a class to attend. Classes become available at their scheduled times.</p>
+                    <div id="classes-container" class="classes-container">
+                        <!-- Classes will be dynamically generated here -->
+                    </div>
+                    <div class="refresh-info">
+                        <p>🔄 This page automatically updates every 30 seconds</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Before Class Starts -->
+            <div id="waiting-screen" class="screen hidden">
+                <div class="waiting-content">
+                    <div class="clock-icon">⏰</div>
+                    <h2 id="waiting-class-title">Class Not Started Yet</h2>
+                    <p>Your selected audio class will begin at:</p>
+                    <div id="scheduled-time" class="scheduled-time"></div>
+                    <div id="countdown" class="countdown"></div>
+                    <p class="info-text">This page will automatically update when the class begins.</p>
+                </div>
+            </div>
+
+            <!-- Audio Player Screen -->
+            <div id="player-screen" class="screen hidden">
+                <div class="player-content">
+                    <div class="class-info">
+                        <h2 id="class-title">Audio Class in Progress</h2>
+                        <p id="class-description">Welcome to today's audio session</p>
+                    </div>
+                    
+                    <div class="audio-player-container">
+                        <audio id="audio-player" controls preload="none">
+                            <p>Your browser does not support the audio element.</p>
+                        </audio>
+                        
+                        <div class="player-controls">
+                            <button id="play-pause-btn" class="control-btn">▶️ Play</button>
+                            <div class="volume-control">
+                                <label for="volume">🔊</label>
+                                <input type="range" id="volume" min="0" max="100" value="80">
+                            </div>
+                        </div>
+                        
+                        <div class="progress-info">
+                            <span id="current-time">00:00</span>
+                            <div class="progress-bar">
+                                <div id="progress" class="progress-fill"></div>
+                            </div>
+                            <span id="duration">00:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="class-notes">
+                        <div id="class-notes-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Class Ended Screen -->
+            <div id="ended-screen" class="screen hidden">
+                <div class="ended-content">
+                    <div class="end-icon">✅</div>
+                    <h2>Class Ended</h2>
+                    <p>Thank you for attending today's audio session!</p>
+                    <div id="next-class-info" class="next-class"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>© 2024 Audio Class System | Protected Content</p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="audio-protection.js"></script>
+    <script src="tunnel-audio-manager.js"></script>
+    <script src="class-list-manager.js"></script>
+    <script src="scheduler.js"></script>
+    <script src="player.js"></script>
+</body>
+</html>

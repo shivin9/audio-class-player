@@ -1,0 +1,55 @@
+{
+  "name": "kirtana-audio-streaming",
+  "version": "1.0.0",
+  "description": "Secure tunnel-based audio streaming system for educational classes",
+  "main": "start-streaming.js",
+  "scripts": {
+    "start": "node start-streaming.js",
+    "start:cloudflare": "node start-streaming.js --cloudflare",
+    "start:dev": "node start-streaming.js --port 3000",
+    "server": "node local-server.js",
+    "tunnel:start": "node tunnel-setup.js start",
+    "tunnel:stop": "node tunnel-setup.js stop",
+    "tunnel:status": "node tunnel-setup.js status",
+    "tunnel:test": "node tunnel-setup.js test",
+    "test:local": "python3 -m http.server 8000",
+    "help": "node start-streaming.js --help"
+  },
+  "keywords": [
+    "audio",
+    "streaming",
+    "education",
+    "kirtana",
+    "tunnel",
+    "secure",
+    "scheduled",
+    "classes"
+  ],
+  "author": "Audio Streaming System",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/kirtana-audio-player.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/kirtana-audio-player/issues"
+  },
+  "homepage": "https://yourusername.github.io/kirtana-audio-player/",
+  "dependencies": {},
+  "devDependencies": {},
+  "files": [
+    "*.js",
+    "*.html",
+    "*.css",
+    "*.md",
+    "audio/"
+  ],
+  "config": {
+    "defaultPort": 3000,
+    "maxStreams": 50,
+    "tokenExpiryMinutes": 60
+  }
+}
