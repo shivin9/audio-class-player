@@ -5,7 +5,7 @@
  * 
  * This script:
  * 1. Starts the local audio server
- * 2. Creates ngrok tunnel and gets the random URL
+ * 2. Creates localtunnel and gets the random URL
  * 3. Updates config files with the new tunnel URL
  * 4. Commits and pushes changes to GitHub
  * 5. Students always get the latest tunnel URL from GitHub Pages
@@ -97,53 +97,40 @@ class AutoDeployManager {
 
     async startTunnelAndCapture() {
         return new Promise((resolve, reject) => {
-            console.log('🚇 Starting ngrok tunnel...');
+            console.log('🚇 Starting localtunnel...');
             
-            this.tunnelProcess = spawn('ngrok', ['http', '3000', '--log=stdout']);
+            const localtunnel = require('localtunnel');
+            
+            localtunnel({ port: 3000 }, (err, tunnel) => {
+                if (err) {
+                    reject(new Error(`Failed to start localtunnel: ${err.message}`));
+                    return;
+                }
+                
+                this.tunnelUrl = tunnel.url;
+                tunnelFound = true;
+                console.log(`✅ Tunnel created: ${this.tunnelUrl}`);
+                clearTimeout(timeout);
+                
+                tunnel.on('close', () => {
+                    console.log('🛑 Localtunnel closed');
+                    this.tunnelProcess = null;
+                });
+                
+                this.tunnelProcess = tunnel;
+                resolve();
+            });
+            
+            return;
+            
+            // Old ngrok code removed
             
             let tunnelFound = false;
             const timeout = setTimeout(() => {
                 if (!tunnelFound) {
-                    reject(new Error('Tunnel startup timeout - ngrok may not be installed or configured'));
+                    reject(new Error('Tunnel startup timeout - localtunnel may not be installed'));
                 }
             }, 30000);
-
-            this.tunnelProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                
-                // Look for tunnel URL in ngrok output
-                const urlPatterns = [
-                    /url=(https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app)/,
-                    /url=(https:\/\/[a-zA-Z0-9-]+\.ngrok\.io)/,
-                    /(https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app)/,
-                    /(https:\/\/[a-zA-Z0-9-]+\.ngrok\.io)/
-                ];
-
-                for (const pattern of urlPatterns) {
-                    const match = output.match(pattern);
-                    if (match && !tunnelFound) {
-                        this.tunnelUrl = match[1] || match[0];
-                        tunnelFound = true;
-                        console.log(`✅ Tunnel created: ${this.tunnelUrl}`);
-                        clearTimeout(timeout);
-                        resolve();
-                        return;
-                    }
-                }
-            });
-
-            this.tunnelProcess.stderr.on('data', (data) => {
-                const error = data.toString();
-                console.log('Tunnel:', error.trim());
-                
-                if (error.includes('command not found')) {
-                    clearTimeout(timeout);
-                    reject(new Error('Ngrok not installed. Please install from: https://ngrok.com/download'));
-                } else if (error.includes('authentication failed')) {
-                    clearTimeout(timeout);
-                    reject(new Error('Ngrok authentication failed. You can use the free version without auth token.'));
-                }
-            });
         });
     }
 

@@ -56,7 +56,7 @@ class RestartManager {
         console.log('🧹 Stopping existing processes...');
         
         return new Promise((resolve) => {
-            exec('pkill -f "local-server.js"; pkill -f "ngrok http"', (error) => {
+            exec('pkill -f "local-server.js"; pkill -f "node.*localtunnel"', (error) => {
                 // Ignore errors - processes might not exist
                 console.log('✅ Existing processes stopped');
                 resolve();
@@ -108,46 +108,39 @@ class RestartManager {
 
     async startTunnel() {
         return new Promise((resolve, reject) => {
-            console.log('🚇 Starting tunnel...');
+            console.log('🚇 Starting localtunnel...');
             
-            this.tunnelProcess = spawn('ngrok', ['http', '3000', '--log=stdout']);
+            const localtunnel = require('localtunnel');
+            
+            localtunnel({ port: 3000 }, (err, tunnel) => {
+                if (err) {
+                    reject(new Error(`Failed to start localtunnel: ${err.message}`));
+                    return;
+                }
+                
+                this.tunnelUrl = tunnel.url;
+                tunnelFound = true;
+                console.log(`✅ Tunnel created: ${this.tunnelUrl}`);
+                
+                tunnel.on('close', () => {
+                    console.log('🛑 Localtunnel closed');
+                    this.tunnelProcess = null;
+                });
+                
+                this.tunnelProcess = tunnel;
+                resolve();
+            });
+            
+            return;
+            
+            // Old ngrok code removed
             
             let tunnelFound = false;
             
-            this.tunnelProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                
-                // Look for tunnel URL
-                const urlPatterns = [
-                    /url=(https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app)/,
-                    /url=(https:\/\/[a-zA-Z0-9-]+\.ngrok\.io)/,
-                    /(https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app)/,
-                    /(https:\/\/[a-zA-Z0-9-]+\.ngrok\.io)/
-                ];
-
-                for (const pattern of urlPatterns) {
-                    const match = output.match(pattern);
-                    if (match && !tunnelFound) {
-                        this.tunnelUrl = match[1] || match[0];
-                        tunnelFound = true;
-                        console.log(`✅ Tunnel created: ${this.tunnelUrl}`);
-                        resolve();
-                        return;
-                    }
-                }
-            });
-
-            this.tunnelProcess.stderr.on('data', (data) => {
-                const error = data.toString();
-                if (!error.includes('INFO') && !error.includes('msg=')) {
-                    console.log('Tunnel:', error.trim());
-                }
-            });
-
-            // Timeout
+            // Timeout for localtunnel
             setTimeout(() => {
                 if (!tunnelFound) {
-                    reject(new Error('Tunnel startup timeout'));
+                    reject(new Error('Localtunnel startup timeout'));
                 }
             }, 30000);
         });

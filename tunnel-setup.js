@@ -1,6 +1,6 @@
 /**
  * Tunnel Setup and Management
- * Creates secure tunnels for audio streaming using ngrok or cloudflare
+ * Creates secure tunnels for audio streaming using localtunnel or cloudflare
  */
 
 const { spawn, exec } = require('child_process');
@@ -11,7 +11,7 @@ const https = require('https');
 class TunnelManager {
     constructor(options = {}) {
         this.serverPort = options.serverPort || 3000;
-        this.tunnelService = options.tunnelService || 'ngrok'; // 'ngrok' or 'cloudflare'
+        this.tunnelService = options.tunnelService || 'localtunnel'; // 'localtunnel' or 'cloudflare'
         this.authToken = options.authToken || null;
         this.subdomain = options.subdomain || null;
         this.tunnelProcess = null;
@@ -52,10 +52,10 @@ class TunnelManager {
 
     async checkDependencies() {
         const services = {
-            ngrok: {
-                command: 'ngrok',
-                installUrl: 'https://ngrok.com/download',
-                checkCommand: 'ngrok --version'
+            localtunnel: {
+                command: 'lt',
+                installUrl: 'https://www.npmjs.com/package/localtunnel',
+                checkCommand: 'lt --version'
             },
             cloudflare: {
                 command: 'cloudflared',
@@ -81,29 +81,19 @@ class TunnelManager {
         });
     }
 
-    async setupNgrok() {
-        if (this.authToken) {
-            return new Promise((resolve, reject) => {
-                console.log('🔐 Setting up ngrok auth token...');
-                exec(`ngrok config add-authtoken ${this.authToken}`, (error) => {
-                    if (error) {
-                        reject(new Error(`Failed to set ngrok auth token: ${error.message}`));
-                    } else {
-                        console.log('✅ Ngrok auth token configured');
-                        resolve();
-                    }
-                });
-            });
-        }
+    async setupLocaltunnel() {
+        // Localtunnel doesn't require auth token setup
+        console.log('✅ Localtunnel ready (no auth required)');
+        return Promise.resolve();
     }
 
     async startTunnel() {
         try {
             await this.checkDependencies();
 
-            if (this.tunnelService === 'ngrok') {
-                await this.setupNgrok();
-                return this.startNgrokTunnel();
+            if (this.tunnelService === 'localtunnel') {
+                await this.setupLocaltunnel();
+                return this.startLocaltunnelTunnel();
             } else if (this.tunnelService === 'cloudflare') {
                 return this.startCloudflareTunnel();
             }
@@ -112,66 +102,49 @@ class TunnelManager {
         }
     }
 
-    startNgrokTunnel() {
+    startLocaltunnelTunnel() {
         return new Promise((resolve, reject) => {
-            console.log(`🚇 Starting ngrok tunnel on port ${this.serverPort}...`);
+            console.log(`🚇 Starting localtunnel on port ${this.serverPort}...`);
             
-            let args = ['http', this.serverPort.toString(), '--log=stdout'];
+            const localtunnel = require('localtunnel');
             
-            if (this.subdomain && this.authToken) {
-                args.push(`--subdomain=${this.subdomain}`);
+            const options = {
+                port: this.serverPort
+            };
+            
+            if (this.subdomain) {
+                options.subdomain = this.subdomain;
             }
-
-            this.tunnelProcess = spawn('ngrok', args);
-
-            let tunnelStarted = false;
-
-            this.tunnelProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                console.log('📡 Ngrok:', output.trim());
-
-                // Parse ngrok output to get tunnel URL - updated patterns for new ngrok format
-                const urlPatterns = [
-                    /url=(https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app)/,  // New format
-                    /url=(https:\/\/[a-zA-Z0-9-]+\.ngrok\.io)/,        // Legacy format
-                    /(https:\/\/[a-zA-Z0-9-]+\.ngrok-free\.app)/,     // Direct match new
-                    /(https:\/\/[a-zA-Z0-9-]+\.ngrok\.io)/            // Direct match legacy
-                ];
-
-                for (const pattern of urlPatterns) {
-                    const urlMatch = output.match(pattern);
-                    if (urlMatch && !tunnelStarted) {
-                        this.tunnelUrl = urlMatch[1] || urlMatch[0];
-                        tunnelStarted = true;
-                        console.log(`🌐 Tunnel URL: ${this.tunnelUrl}`);
-                        this.updateWebConfig();
-                        resolve(this.tunnelUrl);
-                        return;
-                    }
+            
+            localtunnel(options, (err, tunnel) => {
+                if (err) {
+                    console.error('❌ Localtunnel error:', err.message);
+                    reject(new Error(`Failed to start localtunnel: ${err.message}`));
+                    return;
                 }
-            });
-
-            this.tunnelProcess.stderr.on('data', (data) => {
-                const error = data.toString();
-                console.error('❌ Ngrok error:', error.trim());
                 
-                if (error.includes('command not found')) {
-                    reject(new Error('Ngrok not installed. Download from: https://ngrok.com/download'));
-                } else if (error.includes('authentication failed')) {
-                    reject(new Error('Ngrok authentication failed. Please check your auth token.'));
-                }
+                this.tunnelUrl = tunnel.url;
+                console.log(`🌐 Tunnel URL: ${this.tunnelUrl}`);
+                this.updateWebConfig();
+                
+                tunnel.on('close', () => {
+                    console.log('🛑 Localtunnel closed');
+                    this.tunnelUrl = null;
+                    this.tunnelProcess = null;
+                });
+                
+                tunnel.on('error', (err) => {
+                    console.error('❌ Localtunnel error:', err.message);
+                });
+                
+                this.tunnelProcess = tunnel;
+                resolve(this.tunnelUrl);
             });
-
-            this.tunnelProcess.on('close', (code) => {
-                console.log(`🛑 Ngrok tunnel closed with code ${code}`);
-                this.tunnelUrl = null;
-                this.tunnelProcess = null;
-            });
-
+            
             // Timeout after 30 seconds
             setTimeout(() => {
-                if (!tunnelStarted) {
-                    reject(new Error('Tunnel startup timeout. Please check ngrok installation and auth token.'));
+                if (!this.tunnelUrl) {
+                    reject(new Error('Tunnel startup timeout. Please check localtunnel installation.'));
                 }
             }, 30000);
         });
@@ -322,9 +295,9 @@ if (require.main === module) {
 
     const tunnelManager = new TunnelManager({
         serverPort: 3000,
-        tunnelService: args.includes('--cloudflare') ? 'cloudflare' : 'ngrok',
-        authToken: process.env.NGROK_AUTH_TOKEN,
-        subdomain: process.env.NGROK_SUBDOMAIN
+        tunnelService: args.includes('--cloudflare') ? 'cloudflare' : 'localtunnel',
+        authToken: process.env.LOCALTUNNEL_AUTH_TOKEN,
+        subdomain: process.env.LOCALTUNNEL_SUBDOMAIN
     });
 
     async function runCommand() {
@@ -373,13 +346,12 @@ Options:
   --cloudflare       Use Cloudflare tunnel instead of ngrok
   
 Environment Variables:
-  NGROK_AUTH_TOKEN   Your ngrok auth token (for custom subdomains)
-  NGROK_SUBDOMAIN    Custom subdomain for ngrok
+  LOCALTUNNEL_SUBDOMAIN    Custom subdomain for localtunnel
 
 Examples:
   node tunnel-setup.js start
   node tunnel-setup.js start --cloudflare
-  NGROK_AUTH_TOKEN=your_token node tunnel-setup.js start
+  LOCALTUNNEL_SUBDOMAIN=your_subdomain node tunnel-setup.js start
                     `);
             }
         } catch (error) {

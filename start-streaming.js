@@ -52,7 +52,7 @@ class AudioStreamingService {
             console.log('🚇 Step 2: Creating secure tunnel...');
             this.tunnel = new TunnelManager({
                 serverPort: this.server.port,
-                tunnelService: options.tunnelService || 'ngrok',
+                tunnelService: options.tunnelService || 'localtunnel',
                 authToken: options.authToken,
                 subdomain: options.subdomain
             });
@@ -167,7 +167,7 @@ async function main() {
     // Parse arguments
     const options = {
         port: 3000,
-        tunnelService: 'ngrok',
+        tunnelService: 'localtunnel',
         audioDirectory: path.join(__dirname, 'audio'),
         maxStreams: 50,
         tokenExpiry: 60
@@ -181,11 +181,11 @@ async function main() {
             case '--cloudflare':
                 options.tunnelService = 'cloudflare';
                 break;
-            case '--ngrok':
-                options.tunnelService = 'ngrok';
+            case '--localtunnel':
+                options.tunnelService = 'localtunnel';
                 break;
-            case '--auth-token':
-                options.authToken = args[++i];
+            case '--subdomain':
+                options.subdomain = args[++i];
                 break;
             case '--subdomain':
                 options.subdomain = args[++i];
@@ -207,28 +207,26 @@ Usage: node start-streaming.js [options]
 
 Options:
   --port <number>          Local server port (default: 3000)
-  --cloudflare            Use Cloudflare tunnel (default: ngrok)
-  --ngrok                 Use ngrok tunnel
-  --auth-token <token>    Ngrok auth token (for custom subdomains)
-  --subdomain <name>      Custom subdomain for ngrok
+  --cloudflare            Use Cloudflare tunnel (default: localtunnel)
+  --localtunnel           Use localtunnel (default)
+  --subdomain <name>      Custom subdomain for localtunnel
   --audio-dir <path>      Audio files directory (default: ./audio)
   --max-streams <number>  Max concurrent streams (default: 50)
   --token-expiry <mins>   Token expiry in minutes (default: 60)
   --help                  Show this help
 
 Environment Variables:
-  NGROK_AUTH_TOKEN       Your ngrok auth token
-  NGROK_SUBDOMAIN        Custom subdomain for ngrok
+  LOCALTUNNEL_SUBDOMAIN  Custom subdomain for localtunnel
 
 Examples:
   node start-streaming.js
   node start-streaming.js --cloudflare
   node start-streaming.js --port 8080 --max-streams 100
-  NGROK_AUTH_TOKEN=your_token node start-streaming.js --subdomain kirtana
+  LOCALTUNNEL_SUBDOMAIN=kirtana node start-streaming.js --subdomain kirtana
 
 Prerequisites:
   • Node.js installed
-  • ngrok or cloudflared installed
+  • localtunnel npm package or cloudflared installed
   • Audio files in the audio/ directory
                 `);
                 process.exit(0);
@@ -236,8 +234,7 @@ Prerequisites:
     }
 
     // Use environment variables if available
-    options.authToken = options.authToken || process.env.NGROK_AUTH_TOKEN;
-    options.subdomain = options.subdomain || process.env.NGROK_SUBDOMAIN;
+    options.subdomain = options.subdomain || process.env.LOCALTUNNEL_SUBDOMAIN;
 
     const service = new AudioStreamingService();
 

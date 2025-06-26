@@ -38,8 +38,12 @@
     "url": "https://github.com/yourusername/kirtana-audio-player/issues"
   },
   "homepage": "https://yourusername.github.io/kirtana-audio-player/",
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "localtunnel": "^2.0.2"
+  },
+  "devDependencies": {
+    "localtunnel": "^2.0.2"
+  },
   "files": [
     "*.js",
     "*.html",
