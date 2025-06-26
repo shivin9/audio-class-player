@@ -14,6 +14,8 @@ class TunnelAudioManager {
     }
 
     async init() {
+        // Wait a bit for all scripts to load
+        await new Promise(resolve => setTimeout(resolve, 100));
         await this.loadTunnelConfig();
         this.bindEvents();
     }

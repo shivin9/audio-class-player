@@ -153,7 +153,7 @@ window.AUDIO_CONFIG = {
     // Tunnel Configuration (auto-updated by deploy script)
     tunnel: {
         // This gets automatically updated by auto-deploy.js or start-streaming.js
-        baseUrl: 'https://ff09-223-233-78-254.ngrok-free.app', // Will be set to current tunnel URL
+        baseUrl: 'https://29f9-2401-4900-30d2-7121-9c03-af1b-5947-af5b.ngrok-free.app', // Will be set to current tunnel URL
         
         // Auto-detect from tunnel-url.js if available
         autoDetect: true
